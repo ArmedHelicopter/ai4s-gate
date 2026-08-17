@@ -1,30 +1,62 @@
 # ai4s-gate
 
 Host-agnostic middleware for AI-for-Science tool/skill routing.
-Deterministic precondition gating — not a coding agent, not a Claude Code clone.
+Deterministic precondition gating — not a coding agent.
 
 ## What this is
 
 A small library that answers three questions for any host:
 
-1. **Catalog** — which skills/tools may the model see right now?
-2. **Before call** — allow / deny / warn this invocation?
-3. **After call** — what pipeline state did this produce?
+1. **Catalog** — `gate(catalog, state)` — which methods may the model see?
+2. **Before call** — `beforeCall(name, catalog, state)` — allow / deny / unknown?
+3. **After call** — `afterCall(name, catalog, state)` — write pipeline tags.
 
-Hosts (OpenCode, Pi, DeepSeek Harness, a Python script) are optional adapters.
-The core must not import any of them.
+Hosts (Pi, OpenCode, DeepSeek Harness, a script) are optional adapters.
+`src/core` does not import any of them.
 
-## What this is not
+## Try it on an empty Pi
 
-- Not a TUI / CLI agent
-- Not a sandbox, MCP client, or permission UI
-- Not a rewrite of OpenCode, Pi, or Claude Code
+Pi stays stock: four tools (`read`, `write`, `edit`, `bash`). This repo only adds an extension.
 
-## Layout (intended)
+```bash
+cd ai4s-gate
+npm install
+npm test
 
-```text
-packages/core/          # gate / beforeCall / afterCall / inspect
-adapters/               # optional, one folder per host
+# one-shot, no install into ~/.pi
+pi -e ./src/adapters/pi/index.ts
 ```
 
-`easy-agent` remains a local demo/testbed only. New work lands here.
+In the session:
+
+- Mention or write `.pdb` / `.sdf` / `.pdbqt` / `.smi` files — they are inspected into session state.
+- `vina` / `autodock_vina` via bash is **blocked** until `fpocket` has run and ligands are PDBQT with charges.
+- `diffdock` is allowed on SMILES + experimental PDB.
+- `/ai4s` prints visible vs gated methods.
+
+Or symlink for every project:
+
+```bash
+# Windows (pwsh)
+New-Item -ItemType Junction -Path "$env:USERPROFILE\.pi\agent\extensions\ai4s-gate" -Target (Resolve-Path .)
+
+# Unix
+ln -s "$(pwd)" ~/.pi/agent/extensions/ai4s-gate
+```
+
+Pi discovers `package.json` → `"pi": { "extensions": ["./src/adapters/pi/index.ts"] }`.
+
+## Layout
+
+```text
+src/core/           # gate / beforeCall / afterCall / inspect
+src/adapters/pi/    # Pi extension only
+contracts/          # docking YAML contracts
+tests/              # host-free unit tests
+```
+
+`easy-agent` is a separate fork used as a testbed, not this product.
+
+## License
+
+MIT. See `LICENSE` and `NOTICE`.

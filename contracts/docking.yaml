@@ -1,0 +1,67 @@
+# Runtime contracts by short name. Hosts map bash/skill names onto these keys.
+skills:
+  autodock-vina:
+    description: Empirical force-field pocket docking (AutoDock Vina)
+    aliases: [vina, autodock_vina, autodock-vina]
+    preconditionStatus: verified
+    produces_state: [docked_poses]
+    preconditions:
+      category: docking
+      search_scope: [pocket_targeted]
+      accepts:
+        ligand: [pdbqt]
+        receptor: [pdbqt, pdb_experimental]
+      requires_state: [pocket_defined, charges_assigned]
+      scale:
+        rotatable_bonds:
+          max: 12
+          soft_max: 16
+          unit: count
+      excludes:
+        binding_mode: [covalent]
+  diffdock:
+    description: Blind or pocket generative docking (DiffDock)
+    aliases: [diff-dock]
+    preconditionStatus: verified
+    preconditions:
+      category: docking
+      search_scope: [blind, pocket_targeted]
+      accepts:
+        ligand: [smiles_2d, sdf_3d, pdbqt]
+        receptor: [pdb_experimental, pdb_predicted]
+      excludes:
+        binding_mode: [covalent]
+  covalent-dock:
+    description: Covalent docking requiring a reactive residue
+    aliases: [covalent_dock]
+    preconditionStatus: verified
+    preconditions:
+      category: docking
+      requires_state: [reactive_residue_specified]
+      excludes:
+        binding_mode: [noncovalent]
+  fpocket:
+    description: Binding-pocket detection
+    preconditionStatus: verified
+    produces_state: [pocket_defined]
+    preconditions:
+      category: pocket_finding
+      accepts:
+        receptor: [pdb_experimental, pdb_predicted]
+  rdkit-ligand-prep:
+    description: Ligand 3D/charge preparation
+    aliases: [rdkit, ligand-prep]
+    preconditionStatus: verified
+    produces_state: [charges_assigned]
+    preconditions:
+      category: docking
+  mm-gbsa-rescore:
+    description: MM-GBSA rescoring of docked poses
+    aliases: [mmgbsa, mm-gbsa]
+    preconditionStatus: verified
+    preconditions:
+      category: affinity_scoring
+      requires_state: [docked_poses]
+      requires_tag:
+        receptor:
+          provenance: experimental
